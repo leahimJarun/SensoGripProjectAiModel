@@ -20,7 +20,7 @@ def prepareData():
 
     """Fetch all of the dataset file names from directory"""
 
-    datasetList = os.listdir('SensoGripProjectAiModel/Daten_Schulkinder/Datasets')
+    datasetList = os.listdir('Daten_Schulkinder/Datasets')
 
     """make dict with dataset name + its key in SEMS value dataframe"""
 
