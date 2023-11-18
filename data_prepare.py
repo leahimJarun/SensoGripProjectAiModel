@@ -59,7 +59,7 @@ def prepareData():
     
         datasetDF = read_csv('Daten_Schulkinder/Datasets/'+dictEntry)
         datasetDF = datasetDF.transpose()
-        SEMS = int(semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0])
+        SEMS = str(semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0])
         dic = datasetDF.to_dict()
         transdic = {"SEMS":SEMS,"rows":[]}
         for idx, row in dic.items():
