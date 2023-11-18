@@ -27,8 +27,8 @@ import tensorflow as tf
 
 from data_augmentation import augment_data
 
-LABEL_NAME = "gesture"
-DATA_NAME = "accel_ms2_xyz"
+LABEL_NAME = "SEMS"
+DATA_NAME = "SEMS"
 
 
 class DataLoader(object):
