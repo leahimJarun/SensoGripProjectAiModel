@@ -70,7 +70,8 @@ def build_cnn(seq_length):
   print("Built CNN.")
   if not os.path.exists(model_path):
     os.makedirs(model_path)
-  model.load_weights("./netmodels/CNN/weights.h5")
+  #wheights disabled !!!!! TODO
+  #model.load_weights("./netmodels/CNN/weights.h5")
   return model, model_path
 
 
@@ -79,8 +80,8 @@ def build_lstm(seq_length):
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(22),
-          input_shape=(seq_length, 3)),  # output_shape=(batch, 44)
-      tf.keras.layers.Dense(4, activation="sigmoid")  # (batch, 4)
+          input_shape=(seq_length, 15)),  # output_shape=(batch, 44)
+      tf.keras.layers.Dense(10, activation="sigmoid")  # (batch, 4)
   ])
   model_path = os.path.join("./netmodels", "LSTM")
   print("Built LSTM.")
@@ -175,11 +176,12 @@ def train_net(
   print("Difference is %d bytes" % difference)
 
 
-#if __name__ == "__main__":
-#  parser = argparse.ArgumentParser()
-#  parser.add_argument("--model", "-m")
-#  parser.add_argument("--person", "-p")
-#  args = parser.parse_args()
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--model", "-m")
+  parser.add_argument("--person", "-p")
+  args = parser.parse_args()
+  args.model = "LSTM"
 
 seq_length = 2988
 

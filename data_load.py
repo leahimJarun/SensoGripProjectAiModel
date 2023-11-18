@@ -36,7 +36,7 @@ class DataLoader(object):
 
   def __init__(self, train_data_path, valid_data_path, test_data_path,
                seq_length):
-    self.dim = 9
+    self.dim = 15
     self.seq_length = seq_length
     self.label2id = {"0": 0, "1": 1, "2": 2, "3": 3,  "4": 4,  "5": 5,  "6": 6,  "7": 7,  "8": 8,  "9": 9, "10": 10}
     self.train_data, self.train_label, self.train_len = self.get_data_file(
