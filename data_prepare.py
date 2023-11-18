@@ -56,11 +56,18 @@ def prepareData():
     dictList = []
 
     for dictEntry in list(dataSetDict):
+    
         datasetDF = read_csv('Daten_Schulkinder/Datasets/'+dictEntry)
-        datasetDF['SEMS'] = semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0]
+        datasetDF = datasetDF.transpose()
+        SEMS = int(semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0])
         dic = datasetDF.to_dict()
-        dictList.append(dic)
-        
+        transdic = {"SEMS":SEMS,"rows":[]}
+        for idx, row in dic.items():
+            itemslist = []
+            for colum, value in row.items():
+                itemslist.append(value)
+            transdic["rows"].append(itemslist)        
+        dictList.append(transdic)
     
 
     """Split Data into train,validation and test data Approx train=50%,validation=25%,test=25%"""
@@ -96,6 +103,17 @@ def writeData(dictList,Path):
             dic = json.dumps(item, ensure_ascii=False)
             f.write(dic)
             f.write("\n")
+
+def read_data(path):
+  data = []  # pylint: disable=redefined-outer-name
+  with open(path, "r") as f:
+    lines = f.readlines()
+    for idx, line in enumerate(lines):  # pylint: disable=unused-variable
+      dic = json.loads(line)
+      data.append(dic)
+  print("data_length:" + str(len(data)))
+  return data
+
 
 
 if __name__ == "__main__":
