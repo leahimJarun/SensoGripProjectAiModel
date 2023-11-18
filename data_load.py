@@ -56,8 +56,8 @@ class DataLoader(object):
         dic = json.loads(line)
         data.append(dic[DATA_NAME])
         label.append(dic[LABEL_NAME])
-    if data_type == "train":
-      data, label = augment_data(data, label)
+    #if data_type == "train":
+    #  data, label = augment_data(data, label)
     length = len(label)
     print(data_type + "_data_length:" + str(length))
     return data, label, length
