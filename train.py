@@ -177,13 +177,18 @@ def train_net(
 
 
 if __name__ == "__main__":
+
+  #print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
+
   parser = argparse.ArgumentParser()
   parser.add_argument("--model", "-m")
   parser.add_argument("--person", "-p")
   args = parser.parse_args()
   args.model = "LSTM"
 
-seq_length = 2988
+#seq_length = 2988
+seq_length = 128
 
 print("Start to load data...")
 #  if args.person == "true":
