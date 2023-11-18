@@ -28,7 +28,7 @@ import tensorflow as tf
 from data_augmentation import augment_data
 
 LABEL_NAME = "SEMS"
-DATA_NAME = "SEMS"
+DATA_NAME = "rows"
 
 
 class DataLoader(object):
@@ -36,9 +36,9 @@ class DataLoader(object):
 
   def __init__(self, train_data_path, valid_data_path, test_data_path,
                seq_length):
-    self.dim = 3
+    self.dim = 9
     self.seq_length = seq_length
-    self.label2id = {"wing": 0, "ring": 1, "slope": 2, "negative": 3}
+    self.label2id = {"0": 0, "1": 1, "2": 2, "3": 3,  "4": 4,  "5": 5,  "6": 6,  "7": 7,  "8": 8,  "9": 9, "10": 10}
     self.train_data, self.train_label, self.train_len = self.get_data_file(
         train_data_path, "train")
     self.valid_data, self.valid_label, self.valid_len = self.get_data_file(
