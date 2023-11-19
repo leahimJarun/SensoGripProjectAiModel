@@ -77,6 +77,7 @@ def build_cnn(seq_length):
 
 def build_lstm(seq_length):
   """Builds an LSTM in Keras."""
+  #CHANGE input_shape=(seq_length, 15)
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(22),
@@ -120,7 +121,7 @@ def train_net(
     kind):
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 5
+  epochs = 50
   batch_size = 64
   model.compile(
       optimizer="adam",
@@ -148,10 +149,11 @@ def train_net(
       callbacks=[tensorboard_callback])
   loss, acc = model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
+  #num_classes: The possible number of labels the classification task can
   confusion = tf.math.confusion_matrix(
       labels=tf.constant(test_labels),
       predictions=tf.constant(pred),
-      num_classes=10)
+      num_classes=11)
   print(confusion)
   print("Loss {}, Accuracy {}".format(loss, acc))
   # Convert the model to the TensorFlow Lite format without quantization
