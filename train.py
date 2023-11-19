@@ -49,6 +49,8 @@ def calculate_model_size(model):
 
 def build_cnn(seq_length):
   """Builds a convolutional neural network in Keras."""
+  #ERROR ValueError: Input 0 of layer "sequential" is incompatible with the layer: expected shape=(None, 128, 3, 1), found shape=(None, 640, 3, 1)
+
   model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(
           8, (4, 3),
@@ -211,7 +213,8 @@ if __name__ == "__main__":
   args.model = "LSTM"
 
 #seq_length = 2988
-seq_length = 128
+#seq_length = 128
+seq_length = 640
 
 print("Start to load data...")
 #  if args.person == "true":
