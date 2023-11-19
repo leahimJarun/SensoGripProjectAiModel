@@ -120,7 +120,7 @@ def train_net(
     kind):
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 50
+  epochs = 5
   batch_size = 64
   model.compile(
       optimizer="adam",
@@ -138,6 +138,7 @@ def train_net(
   train_data = train_data.batch(batch_size).repeat()
   valid_data = valid_data.batch(batch_size)
   test_data = test_data.batch(batch_size)
+  #CHANGED -> steps_per_epoch=1000
   model.fit(
       train_data,
       epochs=epochs,
@@ -150,11 +151,23 @@ def train_net(
   confusion = tf.math.confusion_matrix(
       labels=tf.constant(test_labels),
       predictions=tf.constant(pred),
-      num_classes=4)
+      num_classes=10)
   print(confusion)
   print("Loss {}, Accuracy {}".format(loss, acc))
   # Convert the model to the TensorFlow Lite format without quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
+  #MIHI
+
+  #converter.optimizations = [tf.lite.Optimize.DEFAULT]
+  #converter.experimental_new_converter=True
+  #converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+
+  converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+  converter._experimental_lower_tensor_list_ops = False
+
+  #MIHI END
+
   tflite_model = converter.convert()
 
   # Save the model to disk
@@ -163,6 +176,14 @@ def train_net(
   # Convert the model to the TensorFlow Lite format with quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
+
+  #MIHI
+
+  converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+  converter._experimental_lower_tensor_list_ops = False
+
+  #MIHI END
+
   tflite_model = converter.convert()
 
   # Save the model to disk
