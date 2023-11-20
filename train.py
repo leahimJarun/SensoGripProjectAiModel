@@ -126,7 +126,8 @@ def train_net(
   """Trains the model."""
   calculate_model_size(model)
   epochs = 1
-  batch_size = 64
+  #CHANGE batch_size = 64
+  batch_size = 10
   model.compile(
       optimizer="adam",
       loss="sparse_categorical_crossentropy",
@@ -212,12 +213,12 @@ if __name__ == "__main__":
   parser.add_argument("--model", "-m")
   parser.add_argument("--person", "-p")
   args = parser.parse_args()
-  args.model = "CNN"
+  args.model = "LSTM"
 
 #seq_length = 2988
 #seq_length = 128
 #seq_length = 640
-seq_length = 128
+seq_length = 20
 
 print("Start to load data...")
 #  if args.person == "true":
