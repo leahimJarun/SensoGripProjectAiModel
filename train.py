@@ -125,7 +125,7 @@ def train_net(
     kind):
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 1
+  epochs = 50
   #CHANGE batch_size = 64
   batch_size = 10
   model.compile(
