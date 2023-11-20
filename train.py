@@ -218,7 +218,7 @@ if __name__ == "__main__":
 #seq_length = 2988
 #seq_length = 128
 #seq_length = 640
-seq_length = 128
+seq_length = 10
 
 print("Start to load data...")
 #  if args.person == "true":
