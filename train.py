@@ -88,7 +88,7 @@ def build_lstm(seq_length):
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(100),
           input_shape=(seq_length, 15)),  # output_shape=(batch, 44)
-      tf.keras.layers.Dense(100, activation="sigmoid")  # (batch, 4)
+      tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
   ])
   model_path = os.path.join("./netmodels", "LSTM")
   print("Built LSTM.")
@@ -135,6 +135,11 @@ def train_net(
       optimizer="adam",
       loss="sparse_categorical_crossentropy",
       metrics=["accuracy"])
+  rmse = tf.keras.metrics.RootMeanSquaredError()
+  #TODO try different optimizer
+  #model with meanquare error out
+  #model.compile(optimizer="adam", loss='mean_squared_error',
+  #            metrics=[rmse,'mae'])
   if kind == "CNN":
     train_data = train_data.map(reshape_function)
     test_data = test_data.map(reshape_function)
@@ -158,6 +163,7 @@ def train_net(
   loss, acc = model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
   #num_classes: The possible number of labels the classification task can
+  #TODO research what is confusion matrix
   confusion = tf.math.confusion_matrix(
       labels=tf.constant(test_labels),
       predictions=tf.constant(pred),
@@ -223,7 +229,10 @@ if __name__ == "__main__":
 #seq_length = 128
 #seq_length = 640
 #seq_length = 64
-seq_length = 128
+#seq_length = 128
+#20 window
+seq_length = 10
+
 
 print("Start to load data...")
 #  if args.person == "true":
