@@ -82,9 +82,10 @@ def build_cnn(seq_length):
 def build_lstm(seq_length):
   """Builds an LSTM in Keras."""
   #CHANGE input_shape=(seq_length, 15)
+  #tf.keras.layers.LSTM(22),
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
-          tf.keras.layers.LSTM(22),
+          tf.keras.layers.LSTM(100),
           input_shape=(seq_length, 15)),  # output_shape=(batch, 44)
       tf.keras.layers.Dense(10, activation="sigmoid")  # (batch, 4)
   ])
@@ -150,7 +151,7 @@ def train_net(
       train_data,
       epochs=epochs,
       validation_data=valid_data,
-      steps_per_epoch=200,
+      steps_per_epoch=1000,
       validation_steps=int((valid_len - 1) / batch_size + 1),
       callbacks=[tensorboard_callback])
   loss, acc = model.evaluate(test_data)
