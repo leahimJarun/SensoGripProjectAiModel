@@ -128,7 +128,7 @@ def train_net(
   epochs = 50
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
-  batch_size = 1
+  batch_size = 32
   model.compile(
       optimizer="adam",
       loss="sparse_categorical_crossentropy",
@@ -220,7 +220,7 @@ if __name__ == "__main__":
 #seq_length = 2988
 #seq_length = 128
 #seq_length = 640
-seq_length = 10
+seq_length = 64
 
 print("Start to load data...")
 #  if args.person == "true":
