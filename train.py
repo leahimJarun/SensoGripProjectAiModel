@@ -34,7 +34,8 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
 
 def reshape_function(data, label):
-  reshaped_data = tf.reshape(data, [-1, 3, 1])
+  #CHANGE reshaped_data = tf.reshape(data, [-1, 3, 1])
+  reshaped_data = tf.reshape(data, [-1, 15, 1])
   return reshaped_data, label
 
 
@@ -50,13 +51,14 @@ def calculate_model_size(model):
 def build_cnn(seq_length):
   """Builds a convolutional neural network in Keras."""
   #ERROR ValueError: Input 0 of layer "sequential" is incompatible with the layer: expected shape=(None, 128, 3, 1), found shape=(None, 640, 3, 1)
-
+  #CHANGE added fixed seq_length
+  #seq_length = 640
   model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(
-          8, (4, 3),
+          8, (4, 15),
           padding="same",
           activation="relu",
-          input_shape=(seq_length, 3, 1)),  # output_shape=(batch, 128, 3, 8)
+          input_shape=(seq_length, 15, 1)),  # output_shape=(batch, 128, 3, 8)
       tf.keras.layers.MaxPool2D((3, 3)),  # (batch, 42, 1, 8)
       tf.keras.layers.Dropout(0.1),  # (batch, 42, 1, 8)
       tf.keras.layers.Conv2D(16, (4, 1), padding="same",
@@ -123,7 +125,7 @@ def train_net(
     kind):
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 50
+  epochs = 1
   batch_size = 64
   model.compile(
       optimizer="adam",
@@ -210,11 +212,12 @@ if __name__ == "__main__":
   parser.add_argument("--model", "-m")
   parser.add_argument("--person", "-p")
   args = parser.parse_args()
-  args.model = "LSTM"
+  args.model = "CNN"
 
 #seq_length = 2988
 #seq_length = 128
-seq_length = 640
+#seq_length = 640
+seq_length = 128
 
 print("Start to load data...")
 #  if args.person == "true":
