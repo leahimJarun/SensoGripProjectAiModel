@@ -83,11 +83,12 @@ def build_lstm(seq_length):
   """Builds an LSTM in Keras."""
   #CHANGE input_shape=(seq_length, 15)
   #tf.keras.layers.LSTM(22),
+  #tf.keras.layers.Dense(10
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(100),
           input_shape=(seq_length, 15)),  # output_shape=(batch, 44)
-      tf.keras.layers.Dense(10, activation="sigmoid")  # (batch, 4)
+      tf.keras.layers.Dense(100, activation="sigmoid")  # (batch, 4)
   ])
   model_path = os.path.join("./netmodels", "LSTM")
   print("Built LSTM.")
