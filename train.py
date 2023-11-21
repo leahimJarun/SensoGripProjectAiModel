@@ -125,7 +125,7 @@ def build_lstm(seq_length):
 
 
 
-  
+  """
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(100),
@@ -133,17 +133,35 @@ def build_lstm(seq_length):
       #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
       tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
   ])
+  """
+
   
-  
+  #WORKING 0.9 RMSE
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer((seq_length,15)),
       tf.keras.layers.LSTM(100, return_sequences = True),     
       tf.keras.layers.LSTM(100, return_sequences = True),
       tf.keras.layers.LSTM(50),
-      tf.keras.layers.Dense(8, activation = 'relu'),
-      tf.keras.layers.Dense(1, activation = 'linear')
+      #tf.keras.layers.Dense(8, activation = 'relu'),
+      tf.keras.layers.Dense(30, activation = 'relu'),
+      tf.keras.layers.Dense(11, activation = 'linear')
+      #tf.keras.layers.Dense(11, activation = 'softmax')
   ])
   
+
+  """
+  model = tf.keras.Sequential([
+          tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(100),
+          input_shape=(seq_length, 15)),
+    #tf.keras.layers.LSTM(100, return_sequences = True),     
+    #tf.keras.layers.LSTM(100, return_sequences = True),
+    #tf.keras.layers.LSTM(50),
+    tf.keras.layers.Dense(8, activation = 'relu'),
+    tf.keras.layers.Dense(1, activation = 'linear')
+  ])
+  """
+
   """
   model = tf.keras.Sequential
   model.add(tf.keras.layers.InputLayer((seq_length,15)))
@@ -219,10 +237,11 @@ def train_net(
 
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 1
+  epochs = 50
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
-  batch_size = 16
+  #batch_size = 16
+  batch_size = 64
   """
   model.compile(
       optimizer="adam",
@@ -244,12 +263,12 @@ def train_net(
   idx = 0
   for data, label in test_data:  # pylint: disable=unused-variable
     test_labels[idx] = label.numpy()
-    print(data)
+    print(str(label))
     idx += 1
   train_data = train_data.batch(batch_size).repeat()
   valid_data = valid_data.batch(batch_size)
   test_data = test_data.batch(batch_size)
-  
+  print(test_data)
   #CHANGED -> steps_per_epoch=1000
   model.fit(
       train_data,
@@ -261,6 +280,9 @@ def train_net(
   loss, acc, val_mae = model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
+  print("\n Prediction should be:")
+  print(test_labels)
+  print("\n Prediction")
   print(pred)
   print("\n\n\n TEST PREDICTION END \n\n\n")
   #num_classes: The possible number of labels the classification task can
@@ -368,9 +390,9 @@ if __name__ == "__main__":
 #seq_length = 128
 #seq_length = 640
 #seq_length = 64
-#seq_length = 128
+seq_length = 128
 #20 window
-seq_length = 10
+#seq_length = 10
 
 
 print("Start to load data...")

@@ -93,11 +93,13 @@ class DataLoader(object):
     # Turn into tf.data.Dataset
     dataset = tf.data.Dataset.from_tensor_slices(
         (features, labels.astype("int32")))
+    print(dataset)
     return length, dataset
 
   def format(self):
     """Format data(including padding, etc.) and get the dataset for the model."""
-    padded_num = 2
+    #CHANGED padded_num = 2
+    padded_num = 1
     self.train_len, self.train_data = self.format_support_func(
         padded_num, self.train_len, self.train_data, self.train_label)
     self.valid_len, self.valid_data = self.format_support_func(

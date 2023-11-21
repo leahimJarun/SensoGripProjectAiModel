@@ -55,9 +55,9 @@ def makeDataSetDict(dataSetList):
 
 def splitData(dictList):
     datasetNumber = len(dictList)
-    numberTrainSets = int(datasetNumber*0.5)
-    numberValidSets = int(datasetNumber*0.25)
-    numberTestSets = int(datasetNumber*0.25)
+    numberTrainSets = int(datasetNumber*0.7)
+    numberValidSets = int(datasetNumber*0.15)
+    numberTestSets = int(datasetNumber*0.15)
 
     numberTrainSets = numberTrainSets + datasetNumber-(numberTestSets+numberTrainSets+numberValidSets)
 
