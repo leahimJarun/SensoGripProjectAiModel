@@ -240,8 +240,8 @@ def train_net(
   epochs = 50
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
-  #batch_size = 16
-  batch_size = 64
+  batch_size = 16
+  
   """
   model.compile(
       optimizer="adam",
@@ -390,9 +390,9 @@ if __name__ == "__main__":
 #seq_length = 128
 #seq_length = 640
 #seq_length = 64
-seq_length = 128
+#seq_length = 128
 #20 window
-#seq_length = 10
+seq_length = 10
 
 
 print("Start to load data...")
