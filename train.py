@@ -29,6 +29,12 @@ from data_load import DataLoader
 import numpy as np
 import tensorflow as tf
 
+
+
+
+
+
+
 logdir = "logs/scalars/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
@@ -84,12 +90,71 @@ def build_lstm(seq_length):
   #CHANGE input_shape=(seq_length, 15)
   #tf.keras.layers.LSTM(22),
   #tf.keras.layers.Dense(10
+
+
+  model_0 = tf.keras.Sequential(
+    [
+        #tf.keras.layers.Input(shape=input_shape),        
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Dropout(0.4),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Dropout(0.5),
+        #tf.keras.layers.Dense(num_classes_0, activation='softmax')
+    ]
+  )
+
+
+
+
+
+  
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(100),
           input_shape=(seq_length, 15)),  # output_shape=(batch, 44)
-      tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
+      #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
+      tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
   ])
+  
+  
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer((seq_length,15)),
+      tf.keras.layers.LSTM(100, return_sequences = True),     
+      tf.keras.layers.LSTM(100, return_sequences = True),
+      tf.keras.layers.LSTM(50),
+      tf.keras.layers.Dense(8, activation = 'relu'),
+      tf.keras.layers.Dense(1, activation = 'linear')
+  ])
+  
+  """
+  model = tf.keras.Sequential
+  model.add(tf.keras.layers.InputLayer((seq_length,15)))
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))     
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.LSTM(50))
+  model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(1, activation = 'linear'))
+  """
+
+
   model_path = os.path.join("./netmodels", "LSTM")
   print("Built LSTM.")
   if not os.path.exists(model_path):
@@ -125,21 +190,52 @@ def train_net(
     test_len,
     test_data,
     kind):
+  
+
+
+
+  """
+  print("\n\n\n TEST PREDICTION \n\n\n")
+  model.predict(train_data)
+  # Load the TFLite model in TFLite Interpreter
+  interpreter = tf.lite.Interpreter(model.tflite)
+  # There is only 1 signature defined in the model,
+  # so it will return it by default.
+  # If there are multiple signatures then we can pass the name.
+  my_signature = interpreter.get_signature_runner()
+
+  # my_signature is callable with input as arguments.
+  output = my_signature(x=tf.constant([1.0], shape=(1,10), dtype=tf.float32))
+  # 'output' is dictionary with all outputs from the inference.
+  # In this case we have single output 'result'.
+  print(output['result'])
+  """
+
+
+
+
+
+
+
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 50
+  epochs = 1
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
   batch_size = 16
+  """
   model.compile(
       optimizer="adam",
       loss="sparse_categorical_crossentropy",
       metrics=["accuracy"])
-  rmse = tf.keras.metrics.RootMeanSquaredError()
+  
   #TODO try different optimizer
   #model with meanquare error out
-  #model.compile(optimizer="adam", loss='mean_squared_error',
-  #            metrics=[rmse,'mae'])
+  """
+  rmse = tf.keras.metrics.RootMeanSquaredError()
+  model.compile(optimizer="adam", loss='mean_squared_error',
+              metrics=[rmse,'mae'])
+  
   if kind == "CNN":
     train_data = train_data.map(reshape_function)
     test_data = test_data.map(reshape_function)
@@ -148,10 +244,12 @@ def train_net(
   idx = 0
   for data, label in test_data:  # pylint: disable=unused-variable
     test_labels[idx] = label.numpy()
+    print(data)
     idx += 1
   train_data = train_data.batch(batch_size).repeat()
   valid_data = valid_data.batch(batch_size)
   test_data = test_data.batch(batch_size)
+  
   #CHANGED -> steps_per_epoch=1000
   model.fit(
       train_data,
@@ -160,8 +258,11 @@ def train_net(
       steps_per_epoch=1000,
       validation_steps=int((valid_len - 1) / batch_size + 1),
       callbacks=[tensorboard_callback])
-  loss, acc = model.evaluate(test_data)
+  loss, acc, val_mae = model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
+  print("\n\n\n TEST PREDICTION \n\n\n")
+  print(pred)
+  print("\n\n\n TEST PREDICTION END \n\n\n")
   #num_classes: The possible number of labels the classification task can
   #TODO research what is confusion matrix
   confusion = tf.math.confusion_matrix(
@@ -169,9 +270,47 @@ def train_net(
       predictions=tf.constant(pred),
       num_classes=11)
   print(confusion)
-  print("Loss {}, Accuracy {}".format(loss, acc))
+  #TODO what is val_mae
+  #print("Loss {}, Accuracy {}".format(loss, acc))
+  print("Loss {}, RMSE {}, val_mae {}".format(loss, acc, val_mae))
   # Convert the model to the TensorFlow Lite format without quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
+  print("\n\n\n BEFORE INFERENCE")
+  # Load the TFLite model and allocate tensors.
+  interpreter = tf.lite.Interpreter(model_path="model.tflite")
+  interpreter.allocate_tensors()
+
+  # Get input and output tensors.
+  input_details = interpreter.get_input_details()
+  output_details = interpreter.get_output_details()
+
+  # Test the model on random input data.
+  input_shape = input_details[0]['shape']
+  input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+  interpreter.set_tensor(input_details[0]['index'], input_data)
+
+  interpreter.invoke()
+
+  # The function `get_tensor()` returns a copy of the tensor data.
+  # Use `tensor()` in order to get a pointer to the tensor.
+  output_data = interpreter.get_tensor(output_details[0]['index'])
+
+
+
+
+
+  print("\n\n\n AFTER INFERENCE")
+  print(output_data)
+
+
+
+  #predict_fn = tf.contrib.predictor.from_saved_model("model.tflite")
+  #predictions = predict_fn(test_data)
+  #print(predictions['scores'])
+
+  
+
 
   #MIHI
 
