@@ -17,6 +17,7 @@ def generateDict(dataSetDict,semsDataframe):
     for dictEntry in list(dataSetDict):
     
         datasetDF = read_csv('Daten_Schulkinder/Datasets/'+dictEntry)
+        datasetDF = datasetDF.drop('timestamp',axis=1)
         datasetDF = datasetDF.transpose()
         if dataSetDict[dictEntry] in semsDataframe['Unnamed: 0'].array:
             SEMS = str(semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0])
@@ -55,9 +56,9 @@ def makeDataSetDict(dataSetList):
 
 def splitData(dictList):
     datasetNumber = len(dictList)
-    numberTrainSets = int(datasetNumber*0.7)
-    numberValidSets = int(datasetNumber*0.15)
-    numberTestSets = int(datasetNumber*0.15)
+    numberTrainSets = int(datasetNumber*0.8)
+    numberValidSets = int(datasetNumber*0.2)
+    numberTestSets = int(datasetNumber*0.1)
 
     numberTrainSets = numberTrainSets + datasetNumber-(numberTestSets+numberTrainSets+numberValidSets)
 
