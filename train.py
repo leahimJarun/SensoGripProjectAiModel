@@ -307,7 +307,7 @@ def train_net(
   train_data = train_data.batch(batch_size).repeat()
   valid_data = valid_data.batch(batch_size)
   test_data = test_data.batch(batch_size)
-  print(test_data)
+  #print(test_data)
   #CHANGED -> steps_per_epoch=1000
   model.fit(
       train_data,
@@ -316,11 +316,11 @@ def train_net(
       steps_per_epoch=1000,
       validation_steps=int((valid_len - 1) / batch_size + 1),
       callbacks=[tensorboard_callback])
-  loss, acc, val_mae = model.evaluate(valid_data)
-  pred = np.argmax(model.predict(valid_data), axis=1)
+  loss, acc, val_mae = model.evaluate(test_data)
+  pred = np.argmax(model.predict(test_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
   print("\n Prediction should be:")
-  print(valid_data)
+  print(test_data)
   print("\n Prediction")
   print(pred)
   print("\n\n\n TEST PREDICTION END \n\n\n")
