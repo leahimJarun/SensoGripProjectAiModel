@@ -41,7 +41,7 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
 def reshape_function(data, label):
   #CHANGE reshaped_data = tf.reshape(data, [-1, 3, 1])
-  reshaped_data = tf.reshape(data, [-1, 15, 1])
+  reshaped_data = tf.reshape(data, [-1, 10, 1])
   return reshaped_data, label
 
 
@@ -61,20 +61,22 @@ def build_cnn(seq_length):
   #seq_length = 640
   model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(
-          8, (4, 15),
+          10, (20, 10),
           padding="same",
           activation="relu",
-          input_shape=(seq_length, 15, 1)),  # output_shape=(batch, 128, 3, 8)
+          input_shape=(seq_length, 10, 1)),  # output_shape=(batch, 128, 3, 8)
       tf.keras.layers.MaxPool2D((3, 3)),  # (batch, 42, 1, 8)
       tf.keras.layers.Dropout(0.1),  # (batch, 42, 1, 8)
-      tf.keras.layers.Conv2D(16, (15, 1), padding="same",
+      #TODO change hyperparameter of following conv2D
+      tf.keras.layers.Conv2D(16, (10, 1), padding="same",
                              activation="relu"),  # (batch, 42, 1, 16)
       tf.keras.layers.MaxPool2D((3, 1), padding="same"),  # (batch, 14, 1, 16)
       tf.keras.layers.Dropout(0.1),  # (batch, 14, 1, 16)
       tf.keras.layers.Flatten(),  # (batch, 224)
       tf.keras.layers.Dense(16, activation="relu"),  # (batch, 16)
       tf.keras.layers.Dropout(0.1),  # (batch, 16)
-      tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
+      #tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
+      tf.keras.layers.Dense(11, activation="relu")  # (batch, 4)
   ])
   model_path = os.path.join("./netmodels", "CNN")
   print("Built CNN.")
@@ -121,19 +123,34 @@ def build_lstm(seq_length):
     ]
   )
 
+  
+  #good model 
+  n_features = 10                        
 
+  model = tf.keras.Sequential()
 
+  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))     
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  ##model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+  model.add(tf.keras.layers.Dense(11, activation = 'relu'))
 
-
+  model.summary()
+  
   """
+  #22.11.2023 - 14:34
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(100, return_sequences = True),
+          input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
           tf.keras.layers.LSTM(100),
-          input_shape=(seq_length, 15)),  # output_shape=(batch, 44)
       #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
-      tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
+      tf.keras.layers.Dense(11, activation="relu")  # (batch, 4)
   ])
   """
+
   """
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer((seq_length,15)),
@@ -162,6 +179,7 @@ def build_lstm(seq_length):
       #tf.keras.layers.Dense(11, activation = 'softmax')
   ])
   """
+  """
   n_features = 15                        
 
   model = tf.keras.Sequential()
@@ -174,6 +192,42 @@ def build_lstm(seq_length):
   model.add(tf.keras.layers.Dense(11, activation = 'linear'))
 
   model.summary()
+  """
+  """
+  #seq 2000 batch 16 -> RMSE 1.41 after 6 epochs
+  n_features = 15                        
+
+  model = tf.keras.Sequential()
+
+  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  model.add(tf.keras.layers.LSTM(100))
+  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  #model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+
+  model.summary()
+  """
+  """
+  n_features = 15                        
+
+  model = tf.keras.Sequential()
+  model.add(tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(100),
+          input_shape=(seq_length, 15)))
+  ##model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  ##model.add(tf.keras.layers.LSTM(100))
+  ###model.add(tf.keras.layers.LSTM(100))
+  ###model.add(tf.keras.layers.LSTM(100))
+  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  #model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dropout(0.1))
+  model.add(tf.keras.layers.Flatten())
+  model.add(tf.keras.layers.Dense(11, activation="linear"))
+
+  model.summary()
+  """
   """
   #WORKING 0.9 RMSE
   model = tf.keras.Sequential([
@@ -276,9 +330,11 @@ def train_net(
 
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 500
+  epochs = 15
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
+  #batch_size = 16
+  
   batch_size = 16
   
   """
@@ -309,18 +365,26 @@ def train_net(
   test_data = test_data.batch(batch_size)
   #print(test_data)
   #CHANGED -> steps_per_epoch=1000
+
+  #EaelyStop
+  #EarlyStopping() saves us a lot of time, it stops the model training once it realizes that there will be no more decrease in loss in further epochs and training can now be stopped earlier than described epochs.
+  early_stop = tf.keras.callbacks.EarlyStopping(monitor = 'val_loss', patience = 2)
+
+
+
   model.fit(
       train_data,
       epochs=epochs,
       validation_data=valid_data,
       steps_per_epoch=1000,
       validation_steps=int((valid_len - 1) / batch_size + 1),
+      #callbacks=[tensorboard_callback, early_stop])
       callbacks=[tensorboard_callback])
   loss, acc, val_mae = model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
   print("\n Prediction should be:")
-  print(test_data)
+  print(test_labels)
   print("\n Prediction")
   print(pred)
   print("\n\n\n TEST PREDICTION END \n\n\n")
@@ -431,7 +495,12 @@ if __name__ == "__main__":
 #seq_length = 64
 #seq_length = 128
 #20 window
-seq_length = 10
+#seq_length = 10
+#je kleiner die seq_length umso ungenauer bzw größerer RMSE ??? why -> weil das fenster zu klein und das model somit keinen gescheiten zusammenhang erkennen kann ??
+#128 -> RMSE 1.378 -> early stop 17 epochs
+#seq 400 batch 16 -> RMSE
+#seq_length = 20
+seq_length = 128
 
 
 print("Start to load data...")
