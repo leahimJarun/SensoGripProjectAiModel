@@ -500,7 +500,7 @@ if __name__ == "__main__":
 #128 -> RMSE 1.378 -> early stop 17 epochs
 #seq 400 batch 16 -> RMSE
 #seq_length = 20
-seq_length = 128
+seq_length = 20
 
 
 print("Start to load data...")
