@@ -18,6 +18,7 @@ def generateDict(dataSetDict,semsDataframe):
     
         datasetDF = read_csv('Daten_Schulkinder/Datasets/'+dictEntry)
         datasetDF = datasetDF.drop(['timestamp','tipUpperRange','tipLowerRange','fingerUpperRange','fingerLowerRange'],axis=1)
+        datasetDF = datasetDF[datasetDF.tipPressure!=0]
         datasetDF = datasetDF.transpose()
         if dataSetDict[dictEntry] in semsDataframe['Unnamed: 0'].array:
             SEMS = str(semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0])
