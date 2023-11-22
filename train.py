@@ -67,14 +67,14 @@ def build_cnn(seq_length):
           input_shape=(seq_length, 15, 1)),  # output_shape=(batch, 128, 3, 8)
       tf.keras.layers.MaxPool2D((3, 3)),  # (batch, 42, 1, 8)
       tf.keras.layers.Dropout(0.1),  # (batch, 42, 1, 8)
-      tf.keras.layers.Conv2D(16, (4, 1), padding="same",
+      tf.keras.layers.Conv2D(16, (15, 1), padding="same",
                              activation="relu"),  # (batch, 42, 1, 16)
       tf.keras.layers.MaxPool2D((3, 1), padding="same"),  # (batch, 14, 1, 16)
       tf.keras.layers.Dropout(0.1),  # (batch, 14, 1, 16)
       tf.keras.layers.Flatten(),  # (batch, 224)
       tf.keras.layers.Dense(16, activation="relu"),  # (batch, 16)
       tf.keras.layers.Dropout(0.1),  # (batch, 16)
-      tf.keras.layers.Dense(4, activation="softmax")  # (batch, 4)
+      tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
   ])
   model_path = os.path.join("./netmodels", "CNN")
   print("Built CNN.")
@@ -134,8 +134,47 @@ def build_lstm(seq_length):
       tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
   ])
   """
+  """
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer((seq_length,15)),
+      #tf.keras.layers.LSTM(100, return_sequences = True),     
+      tf.keras.layers.LSTM(100),
+      #tf.keras.layers.LSTM(50),
+      #tf.keras.layers.Dense(8, activation = 'relu'),
+      #tf.keras.layers.Dense(30, activation = 'relu'),
+      tf.keras.layers.Dense(11, activation = 'linear')
+      #tf.keras.layers.Dense(11, activation = 'softmax')
+  ])
+  """
+  """
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer((seq_length,15)),
+      #tf.keras.layers.LSTM(100, return_sequences = True),     
+      tf.keras.layers.LSTM(15, return_sequences = True),
+      tf.keras.layers.LSTM(30),
+      tf.keras.layers.Dense(15),
+      #tf.keras.layers.LSTM(50),
+      #tf.keras.layers.Dense(8, activation = 'relu'),
+      #tf.keras.layers.Dense(30, activation = 'relu'),
+      ##tf.keras.layers.Dropout(0.1),
+      ##tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(11, activation = 'softmax')
+      #tf.keras.layers.Dense(11, activation = 'softmax')
+  ])
+  """
+  n_features = 15                        
 
-  
+  model = tf.keras.Sequential()
+
+  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  model.add(tf.keras.layers.LSTM(15, return_sequences = True))     
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+
+  model.summary()
+  """
   #WORKING 0.9 RMSE
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer((seq_length,15)),
@@ -147,7 +186,7 @@ def build_lstm(seq_length):
       tf.keras.layers.Dense(11, activation = 'linear')
       #tf.keras.layers.Dense(11, activation = 'softmax')
   ])
-  
+  """
 
   """
   model = tf.keras.Sequential([
@@ -237,7 +276,7 @@ def train_net(
 
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 50
+  epochs = 500
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
   batch_size = 16
@@ -277,11 +316,11 @@ def train_net(
       steps_per_epoch=1000,
       validation_steps=int((valid_len - 1) / batch_size + 1),
       callbacks=[tensorboard_callback])
-  loss, acc, val_mae = model.evaluate(test_data)
-  pred = np.argmax(model.predict(test_data), axis=1)
+  loss, acc, val_mae = model.evaluate(valid_data)
+  pred = np.argmax(model.predict(valid_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
   print("\n Prediction should be:")
-  print(test_labels)
+  print(valid_data)
   print("\n Prediction")
   print(pred)
   print("\n\n\n TEST PREDICTION END \n\n\n")
