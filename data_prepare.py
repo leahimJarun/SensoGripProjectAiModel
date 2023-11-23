@@ -9,7 +9,9 @@ import csv
 import json
 import os
 import random
+import argparse
 from pandas import *
+
 
 def generateDict(dataSetDict,semsDataframe):
     dictList = []
@@ -55,11 +57,11 @@ def makeDataSetDict(dataSetList):
     
     return dataSetDict
 
-def splitData(dictList):
+def splitData(dictList,trainProp,validProp):
     datasetNumber = len(dictList)
-    numberTrainSets = int(datasetNumber*0.45)
-    numberValidSets = int(datasetNumber*0.45)
-    numberTestSets = int(datasetNumber*0.1)
+    numberTrainSets = int(datasetNumber*trainProp)
+    numberValidSets = int(datasetNumber*validProp)
+    numberTestSets = int(datasetNumber*(1-(trainProp+validProp)))
 
     numberTrainSets = numberTrainSets + datasetNumber-(numberTestSets+numberTrainSets+numberValidSets)
 
@@ -77,8 +79,8 @@ def splitData(dictList):
 
     return trainList,validList,testList
 
-def prepareData():
-
+def prepareData(neg=False,trainProp=0.4,validProp=0.4):
+    
     """Import the SEMS values workbook into a dataframe"""
     xls = ExcelFile('Daten_Schulkinder/SEMS_Werte.xlsx')
     semsDataframe = xls.parse(xls.sheet_names[0])
@@ -86,11 +88,10 @@ def prepareData():
     """Fetch all of the dataset file names from directory"""
 
     datasetList = sorted(os.listdir('Daten_Schulkinder/Datasets'))
-
+ 
     """make dict with dataset name + its key in SEMS value dataframe"""
 
-    dataSetDict = makeDataSetDict(datasetList)
-    dataSetDictNeg = makeDataSetDict(datasetList)
+    dataSetDict = makeDataSetDict(datasetList)    
     
 
     """delet any entries in the dict where the key is not found in the SEMS value dataframe"""
@@ -105,10 +106,9 @@ def prepareData():
     """Convert each dataset into a dict and append to list of dictionaries"""
     
     dictList = generateDict(dataSetDict,semsDataframe)
-    dictListNeg = generateDict(dataSetDictNeg,semsDataframe)
 
     """Split Data into train,validation and test data Approx train=50%,validation=25%,test=25%"""
-    trainList,validList,testList = splitData(dictList)
+    trainList,validList,testList = splitData(dictList,trainProp,validProp)
 
     """export dicts into json"""
 
@@ -116,17 +116,19 @@ def prepareData():
     writeData(validList,'Data/valid/valid.json')
     writeData(testList,'Data/test/test.json')
 
-    """Split Data into train,validation and test data Approx train=50%,validation=25%,test=25%"""
-    trainList,validList,testList = splitData(dictListNeg)
 
-    """export dicts into json"""
+    if(neg):
 
-    writeData(trainList,'DataNeg/train/train.json')
-    writeData(validList,'DataNeg/valid/valid.json')
-    writeData(testList,'DataNeg/test/test.json')
+        """Do the same for data including NEGATIVE datasets"""
+        dataSetDictNeg = makeDataSetDict(datasetList)
 
+        dictListNeg = generateDict(dataSetDictNeg,semsDataframe)
 
+        trainList,validList,testList = splitData(dictListNeg,trainProp,validProp)
 
+        writeData(trainList,'DataNeg/train/train.json')
+        writeData(validList,'DataNeg/valid/valid.json')
+        writeData(testList,'DataNeg/test/test.json')
 
 def writeData(dictList,Path):
     with open(Path, "w") as f:
@@ -136,10 +138,10 @@ def writeData(dictList,Path):
             f.write("\n")
 
 def read_data(path):
-  data = []  # pylint: disable=redefined-outer-name
+  data = [] 
   with open(path, "r") as f:
     lines = f.readlines()
-    for idx, line in enumerate(lines):  # pylint: disable=unused-variable
+    for idx, line in enumerate(lines): 
       dic = json.loads(line)
       data.append(dic)
   print("data_length:" + str(len(data)))
@@ -148,4 +150,13 @@ def read_data(path):
 
 
 if __name__ == "__main__":
-    prepareData()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--neg", "-n")
+    parser.add_argument("--train", "-t")
+    parser.add_argument("--valid", "-v")
+    args = parser.parse_args()    
+
+    prepareData(bool(args.neg),float(args.train),float(args.valid))
+    #TODO Arguments einbauen
+    # z.B mit NEG und nicht, Anteil an Train, Valid, Test data
