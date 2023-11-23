@@ -18,7 +18,7 @@ def generateDict(dataSetDict,semsDataframe):
     
         datasetDF = read_csv('Daten_Schulkinder/Datasets/'+dictEntry)
         datasetDF = datasetDF.drop(['timestamp','tipUpperRange','tipLowerRange','fingerUpperRange','fingerLowerRange'],axis=1)
-        datasetDF = datasetDF[datasetDF.tipPressure!=0]
+        datasetDF = datasetDF[datasetDF.tipPressure!=0]# Delete all rows with 0 in tippressure
         datasetDF = datasetDF.transpose()
         if dataSetDict[dictEntry] in semsDataframe['Unnamed: 0'].array:
             SEMS = str(semsDataframe[semsDataframe['Unnamed: 0']==dataSetDict[dictEntry]]['SEMS'].iloc[0])
@@ -85,7 +85,7 @@ def prepareData():
 
     """Fetch all of the dataset file names from directory"""
 
-    datasetList = os.listdir('Daten_Schulkinder/Datasets')
+    datasetList = sorted(os.listdir('Daten_Schulkinder/Datasets'))
 
     """make dict with dataset name + its key in SEMS value dataframe"""
 
