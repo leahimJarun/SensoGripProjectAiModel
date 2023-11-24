@@ -130,11 +130,12 @@ def build_lstm(seq_length):
   model = tf.keras.Sequential()
 
   model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
-  model.add(tf.keras.layers.LSTM(100, return_sequences = True))     
-  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.LSTM(70, return_sequences = True))     
+  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
   model.add(tf.keras.layers.LSTM(50))
   #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
   ##model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+  model.add(tf.keras.layers.Dropout(0.2))
   model.add(tf.keras.layers.Dense(11, activation = 'relu'))
 
   model.summary()
@@ -330,12 +331,13 @@ def train_net(
 
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 15
+  epochs = 250
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
   #batch_size = 16
   
-  batch_size = 16
+  #batch_size = 16
+  batch_size = 10
   
   """
   model.compile(
