@@ -156,8 +156,8 @@ if __name__ == "__main__":
     parser.add_argument("--train", "-t")
     parser.add_argument("--valid", "-v")
     args = parser.parse_args()
-    args.train = "0.6"
-    args.valid = "0.3"   
+    args.train = "0.8"
+    args.valid = "0.1"   
 
     prepareData(bool(args.neg),float(args.train),float(args.valid))
     #TODO Arguments einbauen

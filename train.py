@@ -123,7 +123,7 @@ def build_lstm(seq_length):
     ]
   )
 
-  
+  """
   #good model 
   n_features = 10                        
 
@@ -142,8 +142,9 @@ def build_lstm(seq_length):
   model.add(tf.keras.layers.Dense(11, activation = 'linear'))
 
   model.summary()
-  
   """
+  
+  
   #22.11.2023 - 14:34
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
@@ -151,9 +152,9 @@ def build_lstm(seq_length):
           input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
           tf.keras.layers.LSTM(100),
       #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
-      tf.keras.layers.Dense(11, activation="relu")  # (batch, 4)
+      tf.keras.layers.Dense(11, activation="linear")  # (batch, 4)
   ])
-  """
+  
 
   """
   model = tf.keras.Sequential([
@@ -334,13 +335,15 @@ def train_net(
 
   """Trains the model."""
   calculate_model_size(model)
-  epochs = 250
+  #RMSE 1,7 -> 10 epochs -> batch 64 -> sequenc 20
+  epochs = 150
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
   #batch_size = 16
   
   #batch_size = 16
-  batch_size = 10
+  #batch_size = 10
+  batch_size = 64
   
   """
   model.compile(
@@ -507,7 +510,7 @@ if __name__ == "__main__":
 #seq_length = 20 # RMSE LSTM -> 2.3 -> 10 Epochs
 #without 0 rows RMSE 2.3 and 1.8 -> with 0 rows RMSE 2.5
 #seq_length = 128 # RMSE LSTM -> 1.7 -> 10 Epochs
-seq_length = 128
+seq_length = 20
 
 
 print("Start to load data...")
