@@ -130,13 +130,16 @@ def build_lstm(seq_length):
   model = tf.keras.Sequential()
 
   model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
-  model.add(tf.keras.layers.LSTM(70, return_sequences = True))     
+  #model.add(tf.keras.layers.BatchNormalization())
+  model.add(tf.keras.layers.LSTM(70, return_sequences = True))
+  #model.add(tf.keras.layers.BatchNormalization())     
   #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.Dropout(0.2))
   model.add(tf.keras.layers.LSTM(50))
   #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
   ##model.add(tf.keras.layers.Dense(11, activation = 'linear'))
   model.add(tf.keras.layers.Dropout(0.2))
-  model.add(tf.keras.layers.Dense(11, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
 
   model.summary()
   
@@ -501,8 +504,10 @@ if __name__ == "__main__":
 #je kleiner die seq_length umso ungenauer bzw größerer RMSE ??? why -> weil das fenster zu klein und das model somit keinen gescheiten zusammenhang erkennen kann ??
 #128 -> RMSE 1.378 -> early stop 17 epochs
 #seq 400 batch 16 -> RMSE
-#seq_length = 20
-seq_length = 20
+#seq_length = 20 # RMSE LSTM -> 2.3 -> 10 Epochs
+#without 0 rows RMSE 2.3 and 1.8 -> with 0 rows RMSE 2.5
+#seq_length = 128 # RMSE LSTM -> 1.7 -> 10 Epochs
+seq_length = 128
 
 
 print("Start to load data...")

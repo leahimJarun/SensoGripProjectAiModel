@@ -69,15 +69,18 @@ class DataLoader(object):
     noise_level = 0
     padded_data = []
     # Before- Neighbour padding
-    tmp_data = (np.random.rand(seq_length, dim) - 0.5) * noise_level + data[0]
+    ##tmp_data = (np.random.rand(seq_length, dim) - 0.5) * noise_level + data[0]
+    tmp_data = (np.random.rand(seq_length, dim) - 0.5) + data[0]
     tmp_data[(seq_length -
               min(len(data), seq_length)):] = data[:min(len(data), seq_length)]
     padded_data.append(tmp_data)
     # After- Neighbour padding
-    tmp_data = (np.random.rand(seq_length, dim) - 0.5) * noise_level + data[-1]
+    ##tmp_data = (np.random.rand(seq_length, dim) - 0.5) * noise_level + data[-1]
+    tmp_data = (np.random.rand(seq_length, dim) - 0.5) + data[-1]
     tmp_data[:min(len(data), seq_length)] = data[:min(len(data), seq_length)]
     padded_data.append(tmp_data)
     return padded_data
+    #return data
 
   def format_support_func(self, padded_num, length, data, label):
     """Support function for format.(Helps format train, valid and test.)"""
