@@ -59,6 +59,7 @@ def build_cnn(seq_length):
   #ERROR ValueError: Input 0 of layer "sequential" is incompatible with the layer: expected shape=(None, 128, 3, 1), found shape=(None, 640, 3, 1)
   #CHANGE added fixed seq_length
   #seq_length = 640
+  """
   model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(
           10, (20, 10),
@@ -76,8 +77,24 @@ def build_cnn(seq_length):
       tf.keras.layers.Dense(16, activation="relu"),  # (batch, 16)
       tf.keras.layers.Dropout(0.1),  # (batch, 16)
       #tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
-      tf.keras.layers.Dense(11, activation="relu")  # (batch, 4)
+      tf.keras.layers.Dense(9, activation="relu")  # (batch, 4)
   ])
+  """
+
+  model = tf.keras.Sequential()
+  model.add(tf.keras.layers.Conv2D(
+          10, (20, 10),
+          padding="same",
+          activation="relu",
+          input_shape=(seq_length, 10, 1)))
+  model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+  model.add(tf.keras.layers.Flatten())
+  #model.add(tf.keras.layers.Dense(64, activation='relu'))
+  model.add(tf.keras.layers.Dense(9))
+
+
+
+
   model_path = os.path.join("./netmodels", "CNN")
   print("Built CNN.")
   if not os.path.exists(model_path):
@@ -144,17 +161,48 @@ def build_lstm(seq_length):
   model.summary()
   """
   
+  #RMSE 1.4 -> but no accurate predictions epochs 30 -> seq 20 -> batch 64
+  #Loss: 0.939727783203125, RMSE: 0.9693955779075623 -> epochs 30 -> batch 64 -> seq 20
+  model = tf.keras.Sequential([
+          tf.keras.Input(shape=(seq_length, 10)),
+          tf.keras.layers.LSTM(100),#, return_sequences = True),
+          tf.keras.layers.Flatten(),
+          #tf.keras.layers.Dropout(0.2),
+          #tf.keras.layers.Dense(units=84, activation="relu"),
+          tf.keras.layers.Dense(units=9, activation="linear"),
+      ])
+  model.summary()
   
+
+  """
+  #Loss: 2.5077505111694336, RMSE: 1.583587884902954 -> 5 epochs
+  model = tf.keras.Sequential([
+      tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(20),
+          input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
+          #tf.keras.layers.Dropout(0.2),
+          #tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
+  ])
+
+  model.summary()
+  """
+
+
+  """
+  #good model 2 -> RMSE 1.4 ohne dropout layer 24epochs batch 64 seq 20-> mit dropout layer RMSE
   #22.11.2023 - 14:34
   model = tf.keras.Sequential([
       tf.keras.layers.Bidirectional(
           tf.keras.layers.LSTM(100, return_sequences = True),
           input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
           tf.keras.layers.LSTM(100),
+          tf.keras.layers.Dropout(0.2),
       #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
-      tf.keras.layers.Dense(11, activation="linear")  # (batch, 4)
+      tf.keras.layers.Dense(11)#, activation="relu")  # (batch, 4)
+      #tf.keras.layers.Dense(11, activation="linear")  # (batch, 4)
   ])
-  
+  """
 
   """
   model = tf.keras.Sequential([
@@ -336,7 +384,7 @@ def train_net(
   """Trains the model."""
   calculate_model_size(model)
   #RMSE 1,7 -> 10 epochs -> batch 64 -> sequenc 20
-  epochs = 150
+  epochs = 5 #15 # maybe 26 better
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
   #batch_size = 16
@@ -355,8 +403,13 @@ def train_net(
   #model with meanquare error out
   """
   rmse = tf.keras.metrics.RootMeanSquaredError()
-  model.compile(optimizer="adam", loss='mean_squared_error',
-              metrics=[rmse,'mae'])
+  #model.compile(optimizer="adam", loss='mean_squared_error',
+  #            metrics=[rmse,'mae'])
+  model.compile(
+    optimizer='adam',
+    loss='mse',
+    metrics=[tf.keras.metrics.RootMeanSquaredError()])
+
   
   if kind == "CNN":
     train_data = train_data.map(reshape_function)
@@ -368,15 +421,31 @@ def train_net(
     test_labels[idx] = label.numpy()
     print(str(label))
     idx += 1
+  
+
+  #load train_data_entry for test
+  print("--> trainTest_labels: ")
+  trainTest_labels = np.zeros(train_len)
+  idx = 0
+  for data, label in train_data:  # pylint: disable=unused-variable
+    trainTest_labels[idx] = label.numpy()
+    print(str(label))
+    idx += 1
+  trainTest_data = train_data.batch(batch_size)
+
+
   train_data = train_data.batch(batch_size).repeat()
   valid_data = valid_data.batch(batch_size)
   test_data = test_data.batch(batch_size)
+  #print("TEST-DATA: ")
   #print(test_data)
   #CHANGED -> steps_per_epoch=1000
 
   #EaelyStop
   #EarlyStopping() saves us a lot of time, it stops the model training once it realizes that there will be no more decrease in loss in further epochs and training can now be stopped earlier than described epochs.
   early_stop = tf.keras.callbacks.EarlyStopping(monitor = 'val_loss', patience = 2)
+
+  
 
 
 
@@ -385,10 +454,12 @@ def train_net(
       epochs=epochs,
       validation_data=valid_data,
       steps_per_epoch=1000,
-      validation_steps=int((valid_len - 1) / batch_size + 1),
+      #validation_steps=int((valid_len - 1) / batch_size + 1),
+      validation_steps=1,
       #callbacks=[tensorboard_callback, early_stop])
       callbacks=[tensorboard_callback])
-  loss, acc, val_mae = model.evaluate(test_data)
+  #loss, acc, val_mae = model.evaluate(test_data)
+  loss, rmse = model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
   print("\n Prediction should be:")
@@ -401,14 +472,16 @@ def train_net(
   confusion = tf.math.confusion_matrix(
       labels=tf.constant(test_labels),
       predictions=tf.constant(pred),
-      num_classes=11)
+      num_classes=9)
   print(confusion)
   #TODO what is val_mae
   #print("Loss {}, Accuracy {}".format(loss, acc))
-  print("Loss {}, RMSE {}, val_mae {}".format(loss, acc, val_mae))
+  #print("Loss {}, RMSE {}, val_mae {}".format(loss, acc, val_mae))
+  print("Loss: {}, RMSE: {}".format(loss, rmse))
   # Convert the model to the TensorFlow Lite format without quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
+  """
   print("\n\n\n BEFORE INFERENCE")
   # Load the TFLite model and allocate tensors.
   interpreter = tf.lite.Interpreter(model_path="model.tflite")
@@ -435,7 +508,7 @@ def train_net(
 
   print("\n\n\n AFTER INFERENCE")
   print(output_data)
-
+  """
 
 
   #predict_fn = tf.contrib.predictor.from_saved_model("model.tflite")
@@ -455,7 +528,8 @@ def train_net(
   converter._experimental_lower_tensor_list_ops = False
 
   #MIHI END
-
+  
+  
   tflite_model = converter.convert()
 
   # Save the model to disk
@@ -464,7 +538,7 @@ def train_net(
   # Convert the model to the TensorFlow Lite format with quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
-
+  
   #MIHI
 
   converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
@@ -494,7 +568,7 @@ if __name__ == "__main__":
   parser.add_argument("--model", "-m")
   parser.add_argument("--person", "-p")
   args = parser.parse_args()
-  args.model = "LSTM"
+  args.model = "CNN"
 
 #seq_length data window size
 #seq_length = 2988
