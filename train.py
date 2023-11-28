@@ -160,19 +160,46 @@ def build_lstm(seq_length):
 
   model.summary()
   """
-  
+  #LSTM Sequential model with 2 layers, 100 neurons in first layer after it a flatten and then a dense-layer with 9 neurons
+  #Best performing model till now 28.11.2023 14:26
   #RMSE 1.4 -> but no accurate predictions epochs 30 -> seq 20 -> batch 64
   #Loss: 0.939727783203125, RMSE: 0.9693955779075623 -> epochs 30 -> batch 64 -> seq 20
   model = tf.keras.Sequential([
           tf.keras.Input(shape=(seq_length, 10)),
-          tf.keras.layers.LSTM(100),#, return_sequences = True),
+          tf.keras.layers.LSTM(100),
           tf.keras.layers.Flatten(),
-          #tf.keras.layers.Dropout(0.2),
-          #tf.keras.layers.Dense(units=84, activation="relu"),
           tf.keras.layers.Dense(units=9, activation="linear"),
       ])
   model.summary()
   
+  #LSTM Sequential model with 2 layers, 100 neurons in first layer after it a Dropoutlayer with 20% and then a dense-layer with 9 neurons
+  model1 = tf.keras.Sequential([
+        tf.keras.Input(shape=(seq_length, 10)),
+        tf.keras.layers.LSTM(100),
+        #tf.keras.layers.Flatten(),
+        tf.keras.layers.Dropout(0.2),
+        #tf.keras.layers.Dense(units=84, activation="relu"),
+        tf.keras.layers.Dense(units=9, activation="linear"),
+    ])
+  model1.summary()
+
+  model2 = tf.keras.Sequential([
+      tf.keras.Input(shape=(seq_length, 10)),
+      tf.keras.layers.LSTM(100),
+      tf.keras.layers.Dropout(0.2),
+      tf.keras.layers.Dense(units=9, activation="linear"),
+  ])
+  model2.summary()
+
+  #LSTM Sequential model with 3 layers, 100 neurons in first layer, 100 neurons in second layer and then a dense-layer with 9 neurons
+  model3 = tf.keras.Sequential([
+      tf.keras.Input(shape=(seq_length, 10)),
+      tf.keras.layers.LSTM(100),
+      tf.keras.layers.LSTM(100),
+      tf.keras.layers.Dense(units=9, activation="linear"),
+  ])
+  model3.summary()
+
 
   """
   #Loss: 2.5077505111694336, RMSE: 1.583587884902954 -> 5 epochs
@@ -408,7 +435,7 @@ def train_net(
   model.compile(
     optimizer='adam',
     loss='mse',
-    metrics=[tf.keras.metrics.RootMeanSquaredError()])
+    metrics=[tf.keras.metrics.RootMeanSquaredError(), "accuracy"])
 
   
   if kind == "CNN":
@@ -459,7 +486,7 @@ def train_net(
       #callbacks=[tensorboard_callback, early_stop])
       callbacks=[tensorboard_callback])
   #loss, acc, val_mae = model.evaluate(test_data)
-  loss, rmse = model.evaluate(test_data)
+  loss, rmse, acc= model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
   print("\n Prediction should be:")
@@ -477,7 +504,7 @@ def train_net(
   #TODO what is val_mae
   #print("Loss {}, Accuracy {}".format(loss, acc))
   #print("Loss {}, RMSE {}, val_mae {}".format(loss, acc, val_mae))
-  print("Loss: {}, RMSE: {}".format(loss, rmse))
+  print("Loss: {}, RMSE: {}, Accuracy: {}".format(loss, rmse, acc))
   # Convert the model to the TensorFlow Lite format without quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
