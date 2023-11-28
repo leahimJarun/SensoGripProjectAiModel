@@ -29,14 +29,7 @@ from data_load import DataLoader
 import numpy as np
 import tensorflow as tf
 
-
-
-
-
 model_name = ""
-
-logdir = "logs/scalars/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + model_name
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
 
 def reshape_function(data, label):
@@ -81,6 +74,9 @@ def build_cnn(args, seq_length):
       tf.keras.layers.Dense(9, activation="relu")  # (batch, 4)
   ])
   """
+
+  global model_name
+
   #TODO add modelnumber to foldername
   if args.modelnumber == "0":
     model_name = "-CNN_model0"
@@ -168,6 +164,8 @@ def build_lstm(seq_length):
   #Best performing model till now 28.11.2023 14:26
   #RMSE 1.4 -> but no accurate predictions epochs 30 -> seq 20 -> batch 64
   #Loss: 0.939727783203125, RMSE: 0.9693955779075623 -> epochs 30 -> batch 64 -> seq 20
+
+  global model_name
 
   #TODO add modelnumber to foldername
   if args.modelnumber == "0":
@@ -610,39 +608,40 @@ if __name__ == "__main__":
   args.model = "CNN"
   args.modelnumber = "0"
 
-#seq_length data window size
-#seq_length = 2988
-#seq_length = 128
-#seq_length = 640
-#seq_length = 64
-#seq_length = 128
-#20 window
-#seq_length = 10
-#je kleiner die seq_length umso ungenauer bzw größerer RMSE ??? why -> weil das fenster zu klein und das model somit keinen gescheiten zusammenhang erkennen kann ??
-#128 -> RMSE 1.378 -> early stop 17 epochs
-#seq 400 batch 16 -> RMSE
-#seq_length = 20 # RMSE LSTM -> 2.3 -> 10 Epochs
-#without 0 rows RMSE 2.3 and 1.8 -> with 0 rows RMSE 2.5
-#seq_length = 128 # RMSE LSTM -> 1.7 -> 10 Epochs
-seq_length = 20
+  #seq_length data window size
+  #seq_length = 2988
+  #seq_length = 128
+  #seq_length = 640
+  #seq_length = 64
+  #seq_length = 128
+  #20 window
+  #seq_length = 10
+  #je kleiner die seq_length umso ungenauer bzw größerer RMSE ??? why -> weil das fenster zu klein und das model somit keinen gescheiten zusammenhang erkennen kann ??
+  #128 -> RMSE 1.378 -> early stop 17 epochs
+  #seq 400 batch 16 -> RMSE
+  #seq_length = 20 # RMSE LSTM -> 2.3 -> 10 Epochs
+  #without 0 rows RMSE 2.3 and 1.8 -> with 0 rows RMSE 2.5
+  #seq_length = 128 # RMSE LSTM -> 1.7 -> 10 Epochs
+  seq_length = 20
 
 
-print("Start to load data...")
-#  if args.person == "true":
-#    train_len, train_data, valid_len, valid_data, test_len, test_data = \
-#        load_data("./person_split/train", "./person_split/valid",
-#                  "./person_split/test", seq_length)
-#  else:
-train_len, train_data, valid_len, valid_data, test_len, test_data = \
-        load_data("./Data/train/train.json", "./Data/valid/valid.json", "./Data/test/test.json", seq_length)
+  print("Start to load data...")
+  #  if args.person == "true":
+  #    train_len, train_data, valid_len, valid_data, test_len, test_data = \
+  #        load_data("./person_split/train", "./person_split/valid",
+  #                  "./person_split/test", seq_length)
+  #  else:
+  train_len, train_data, valid_len, valid_data, test_len, test_data = \
+          load_data("./Data/train/train.json", "./Data/valid/valid.json", "./Data/test/test.json", seq_length)
 
-print("Start to build net...")
-model, model_path = build_net(args, seq_length)
+  print("Start to build net...")
+  model, model_path = build_net(args, seq_length)
 
+  logdir = "logs/scalars/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + model_name
+  tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
+  print("Start training...")
+  train_net(model, model_path, train_len, train_data, valid_len, valid_data,
+              test_len, test_data, args.model)
 
-print("Start training...")
-train_net(model, model_path, train_len, train_data, valid_len, valid_data,
-            test_len, test_data, args.model)
-
-print("Training finished!")
+  print("Training finished!")
