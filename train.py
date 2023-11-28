@@ -28,7 +28,7 @@ def calculate_model_size(model):
   print("Model size:", sum(var_sizes) / 1024, "KB")
 
 
-def build_cnn(args, seq_length):
+def build_cnn(seq_length):
   """Builds a convolutional neural network in Keras."""
   #ERROR ValueError: Input 0 of layer "sequential" is incompatible with the layer: expected shape=(None, 128, 3, 1), found shape=(None, 640, 3, 1)
   #CHANGE added fixed seq_length
@@ -45,7 +45,6 @@ def build_cnn(args, seq_length):
             input_shape=(seq_length, 10, 1)))
     model.add(tf.keras.layers.MaxPooling2D((3, 3)))
     model.add(tf.keras.layers.Flatten())
-    #model.add(tf.keras.layers.Dense(64, activation='relu'))
     model.add(tf.keras.layers.Dense(9, activation='linear'))
     model.summary()
   elif args.modelnumber == "1":
@@ -58,7 +57,6 @@ def build_cnn(args, seq_length):
           input_shape=(seq_length, 10, 1)),  # output_shape=(batch, 128, 3, 8)
       tf.keras.layers.MaxPool2D((3, 3)),  # (batch, 42, 1, 8)
       tf.keras.layers.Dropout(0.1),  # (batch, 42, 1, 8)
-      #TODO change hyperparameter of following conv2D
       tf.keras.layers.Conv2D(16, (10, 1), padding="same",
                              activation="relu"),  # (batch, 42, 1, 16)
       tf.keras.layers.MaxPool2D((3, 1), padding="same"),  # (batch, 14, 1, 16)
@@ -66,7 +64,6 @@ def build_cnn(args, seq_length):
       tf.keras.layers.Flatten(),  # (batch, 224)
       tf.keras.layers.Dense(16, activation="relu"),  # (batch, 16)
       tf.keras.layers.Dropout(0.1),  # (batch, 16)
-      #tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
       tf.keras.layers.Dense(9, activation="relu")  # (batch, 4)
     ])
 
@@ -87,55 +84,6 @@ def build_lstm(seq_length):
   #tf.keras.layers.Dense(10
 
 
-  model_0 = tf.keras.Sequential(
-    [
-        #tf.keras.layers.Input(shape=input_shape),        
-        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Dropout(0.3),
-        tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Dropout(0.4),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(0.5),
-        #tf.keras.layers.Dense(num_classes_0, activation='softmax')
-    ]
-  )
-
-  """
-  #good model 
-  n_features = 10                        
-
-  model = tf.keras.Sequential()
-
-  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
-  #model.add(tf.keras.layers.BatchNormalization())
-  model.add(tf.keras.layers.LSTM(70, return_sequences = True))
-  #model.add(tf.keras.layers.BatchNormalization())     
-  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
-  model.add(tf.keras.layers.Dropout(0.2))
-  model.add(tf.keras.layers.LSTM(50))
-  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
-  ##model.add(tf.keras.layers.Dense(11, activation = 'linear'))
-  model.add(tf.keras.layers.Dropout(0.2))
-  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
-
-  model.summary()
-  """
   #LSTM Sequential model with 2 layers, 100 neurons in first layer after it a flatten and then a dense-layer with 9 neurons
   #Best performing model till now 28.11.2023 14:26
   #RMSE 1.4 -> but no accurate predictions epochs 30 -> seq 20 -> batch 64
@@ -149,12 +97,20 @@ def build_lstm(seq_length):
     model = tf.keras.Sequential([
             tf.keras.Input(shape=(seq_length, 10)),
             tf.keras.layers.LSTM(100),
+            tf.keras.layers.Dense(units=9, activation="relu"),
+        ])
+    model.summary()
+  if args.modelnumber == "1":
+    model_name = "-LSTM_model-1"
+    model = tf.keras.Sequential([
+            tf.keras.Input(shape=(seq_length, 10)),
+            tf.keras.layers.LSTM(100),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(units=9, activation="linear"),
         ])
     model.summary()
-  elif args.modelnumber == "1":
-    model_name = "-LSTM_model-1"
+  elif args.modelnumber == "2":
+    model_name = "-LSTM_model-2"
     #LSTM Sequential model with 2 layers, 100 neurons in first layer after it a Dropoutlayer with 20% and then a dense-layer with 9 neurons
     model = tf.keras.Sequential([
           tf.keras.Input(shape=(seq_length, 10)),
@@ -165,180 +121,35 @@ def build_lstm(seq_length):
           tf.keras.layers.Dense(units=9, activation="linear"),
       ])
     model.summary()
-  elif args.modelnumber == "2":
-    model_name = "-LSTM_model-2"
+  elif args.modelnumber == "3":
+    model_name = "-LSTM_model-3"
     model = tf.keras.Sequential([
         tf.keras.Input(shape=(seq_length, 10)),
         tf.keras.layers.LSTM(100),
         tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(units=9, activation="linear"),
-    ])
-    model.summary()
-  elif args.modelnumber == "3":
-    model_name = "-LSTM_model-3"
-    #LSTM Sequential model with 3 layers, 100 neurons in first layer, 100 neurons in second layer and then a dense-layer with 9 neurons
-    model = tf.keras.Sequential([
-        tf.keras.Input(shape=(seq_length, 10)),
-        tf.keras.layers.LSTM(100),
-        tf.keras.layers.LSTM(100),
-        tf.keras.layers.Dense(units=9, activation="linear"),
+        tf.keras.layers.Dense(units=9, activation="softmax"),
     ])
     model.summary()
   elif args.modelnumber == "4":
     model_name = "-LSTM_model-4"
+    #LSTM Sequential model with 3 layers, 100 neurons in first layer, 100 neurons in second layer and then a dense-layer with 9 neurons
+    model = tf.keras.Sequential([
+        tf.keras.Input(shape=(seq_length, 10)),
+        tf.keras.layers.LSTM(100, return_sequences = True),
+        tf.keras.layers.LSTM(100),
+        tf.keras.layers.Dense(units=9, activation="linear"),
+    ])
+    model.summary()
+  elif args.modelnumber == "5":
+    model_name = "-LSTM_model-5"
     model = tf.keras.Sequential([
     tf.keras.layers.Bidirectional(
         tf.keras.layers.LSTM(100, return_sequences = True),
         input_shape=(seq_length, 10)),
-        tf.keras.layers.LSTM(100),
         tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.LSTM(100),
       tf.keras.layers.Dense(units=9, activation="linear")
     ])
-
-  """
-  #Loss: 2.5077505111694336, RMSE: 1.583587884902954 -> 5 epochs
-  model = tf.keras.Sequential([
-      tf.keras.layers.Bidirectional(
-          tf.keras.layers.LSTM(20),
-          input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
-          #tf.keras.layers.Dropout(0.2),
-          #tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
-  ])
-
-  model.summary()
-  """
-
-
-  """
-  #good model 2 -> RMSE 1.4 ohne dropout layer 24epochs batch 64 seq 20-> mit dropout layer RMSE
-  #22.11.2023 - 14:34
-  model = tf.keras.Sequential([
-      tf.keras.layers.Bidirectional(
-          tf.keras.layers.LSTM(100, return_sequences = True),
-          input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
-          tf.keras.layers.LSTM(100),
-          tf.keras.layers.Dropout(0.2),
-      #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
-      tf.keras.layers.Dense(11)#, activation="relu")  # (batch, 4)
-      #tf.keras.layers.Dense(11, activation="linear")  # (batch, 4)
-  ])
-  """
-
-  """
-  model = tf.keras.Sequential([
-      tf.keras.layers.InputLayer((seq_length,15)),
-      #tf.keras.layers.LSTM(100, return_sequences = True),     
-      tf.keras.layers.LSTM(100),
-      #tf.keras.layers.LSTM(50),
-      #tf.keras.layers.Dense(8, activation = 'relu'),
-      #tf.keras.layers.Dense(30, activation = 'relu'),
-      tf.keras.layers.Dense(11, activation = 'linear')
-      #tf.keras.layers.Dense(11, activation = 'softmax')
-  ])
-  """
-  """
-  model = tf.keras.Sequential([
-      tf.keras.layers.InputLayer((seq_length,15)),
-      #tf.keras.layers.LSTM(100, return_sequences = True),     
-      tf.keras.layers.LSTM(15, return_sequences = True),
-      tf.keras.layers.LSTM(30),
-      tf.keras.layers.Dense(15),
-      #tf.keras.layers.LSTM(50),
-      #tf.keras.layers.Dense(8, activation = 'relu'),
-      #tf.keras.layers.Dense(30, activation = 'relu'),
-      ##tf.keras.layers.Dropout(0.1),
-      ##tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(11, activation = 'softmax')
-      #tf.keras.layers.Dense(11, activation = 'softmax')
-  ])
-  """
-  """
-  n_features = 15                        
-
-  model = tf.keras.Sequential()
-
-  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
-  model.add(tf.keras.layers.LSTM(15, return_sequences = True))     
-  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
-  model.add(tf.keras.layers.LSTM(50))
-  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
-  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
-
-  model.summary()
-  """
-  """
-  #seq 2000 batch 16 -> RMSE 1.41 after 6 epochs
-  n_features = 15                        
-
-  model = tf.keras.Sequential()
-
-  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
-  model.add(tf.keras.layers.LSTM(100))
-  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
-  #model.add(tf.keras.layers.LSTM(50))
-  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
-  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
-
-  model.summary()
-  """
-  """
-  n_features = 15                        
-
-  model = tf.keras.Sequential()
-  model.add(tf.keras.layers.Bidirectional(
-          tf.keras.layers.LSTM(100),
-          input_shape=(seq_length, 15)))
-  ##model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
-  ##model.add(tf.keras.layers.LSTM(100))
-  ###model.add(tf.keras.layers.LSTM(100))
-  ###model.add(tf.keras.layers.LSTM(100))
-  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
-  #model.add(tf.keras.layers.LSTM(50))
-  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
-  model.add(tf.keras.layers.Dropout(0.1))
-  model.add(tf.keras.layers.Flatten())
-  model.add(tf.keras.layers.Dense(11, activation="linear"))
-
-  model.summary()
-  """
-  """
-  #WORKING 0.9 RMSE
-  model = tf.keras.Sequential([
-      tf.keras.layers.InputLayer((seq_length,15)),
-      tf.keras.layers.LSTM(100, return_sequences = True),     
-      tf.keras.layers.LSTM(100, return_sequences = True),
-      tf.keras.layers.LSTM(50),
-      #tf.keras.layers.Dense(8, activation = 'relu'),
-      tf.keras.layers.Dense(30, activation = 'relu'),
-      tf.keras.layers.Dense(11, activation = 'linear')
-      #tf.keras.layers.Dense(11, activation = 'softmax')
-  ])
-  """
-
-  """
-  model = tf.keras.Sequential([
-          tf.keras.layers.Bidirectional(
-          tf.keras.layers.LSTM(100),
-          input_shape=(seq_length, 15)),
-    #tf.keras.layers.LSTM(100, return_sequences = True),     
-    #tf.keras.layers.LSTM(100, return_sequences = True),
-    #tf.keras.layers.LSTM(50),
-    tf.keras.layers.Dense(8, activation = 'relu'),
-    tf.keras.layers.Dense(1, activation = 'linear')
-  ])
-  """
-
-  """
-  model = tf.keras.Sequential
-  model.add(tf.keras.layers.InputLayer((seq_length,15)))
-  model.add(tf.keras.layers.LSTM(100, return_sequences = True))     
-  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
-  model.add(tf.keras.layers.LSTM(50))
-  model.add(tf.keras.layers.Dense(8, activation = 'relu'))
-  model.add(tf.keras.layers.Dense(1, activation = 'linear'))
-  """
-
 
   model_path = os.path.join("./netmodels", "LSTM")
   print("Built LSTM.")
@@ -357,9 +168,9 @@ def load_data(train_data_path, valid_data_path, test_data_path, seq_length):
 
 def build_net(args, seq_length):
   if args.model == "CNN":
-    model, model_path = build_cnn(args, seq_length)
+    model, model_path = build_cnn(seq_length)
   elif args.model == "LSTM":
-    model, model_path = build_lstm(args, seq_length)
+    model, model_path = build_lstm(seq_length)
   else:
     print("Please input correct model name.(CNN  LSTM)")
   return model, model_path
@@ -405,7 +216,7 @@ def train_net(
   """Trains the model."""
   calculate_model_size(model)
   #RMSE 1,7 -> 10 epochs -> batch 64 -> sequenc 20
-  epochs = 5 #15 # maybe 26 better
+  epochs = 30 #15 # maybe 26 better
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
   #CHANGE batch_size = 64
   #batch_size = 16
@@ -590,7 +401,7 @@ if __name__ == "__main__":
   parser.add_argument("--modelnumber", "-mn")
   parser.add_argument("--person", "-p")
   args = parser.parse_args()
-  args.model = "CNN"
+  args.model = "LSTM"
   args.modelnumber = "0"
 
   #seq_length data window size
@@ -630,3 +441,203 @@ if __name__ == "__main__":
               test_len, test_data, args.model)
 
   print("Training finished!")
+
+
+
+#LIST OF TESTED LSTM MODELS
+  """
+  #Loss: 2.5077505111694336, RMSE: 1.583587884902954 -> 5 epochs
+  model = tf.keras.Sequential([
+      tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(20),
+          input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
+          #tf.keras.layers.Dropout(0.2),
+          #tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
+  ])
+
+  model.summary()
+  """
+
+
+  """
+  #good model 2 -> RMSE 1.4 ohne dropout layer 24epochs batch 64 seq 20-> mit dropout layer RMSE
+  #22.11.2023 - 14:34
+  model = tf.keras.Sequential([
+      tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(100, return_sequences = True),
+          input_shape=(seq_length, 10)),  # output_shape=(batch, 44)
+          tf.keras.layers.LSTM(100),
+          tf.keras.layers.Dropout(0.2),
+      #tf.keras.layers.Dense(11, activation="sigmoid")  # (batch, 4)
+      tf.keras.layers.Dense(11)#, activation="relu")  # (batch, 4)
+      #tf.keras.layers.Dense(11, activation="linear")  # (batch, 4)
+  ])
+  """
+
+  """
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer((seq_length,15)),
+      #tf.keras.layers.LSTM(100, return_sequences = True),     
+      tf.keras.layers.LSTM(100),
+      #tf.keras.layers.LSTM(50),
+      #tf.keras.layers.Dense(8, activation = 'relu'),
+      #tf.keras.layers.Dense(30, activation = 'relu'),
+      tf.keras.layers.Dense(11, activation = 'linear')
+      #tf.keras.layers.Dense(11, activation = 'softmax')
+  ])
+  """
+  """
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer((seq_length,15)),
+      #tf.keras.layers.LSTM(100, return_sequences = True),     
+      tf.keras.layers.LSTM(15, return_sequences = True),
+      tf.keras.layers.LSTM(30),
+      tf.keras.layers.Dense(15),
+      #tf.keras.layers.LSTM(50),
+      #tf.keras.layers.Dense(8, activation = 'relu'),
+      #tf.keras.layers.Dense(30, activation = 'relu'),
+      ##tf.keras.layers.Dropout(0.1),
+      ##tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(11, activation = 'softmax')
+      #tf.keras.layers.Dense(11, activation = 'softmax')
+  ])
+  """
+  """
+  n_features = 15                        
+
+  model = tf.keras.Sequential()
+
+  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  model.add(tf.keras.layers.LSTM(15, return_sequences = True))     
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+
+  model.summary()
+  """
+  """
+  #seq 2000 batch 16 -> RMSE 1.41 after 6 epochs
+  n_features = 15                        
+
+  model = tf.keras.Sequential()
+
+  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  model.add(tf.keras.layers.LSTM(100))
+  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  #model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+
+  model.summary()
+  """
+  """
+  n_features = 15                        
+
+  model = tf.keras.Sequential()
+  model.add(tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(100),
+          input_shape=(seq_length, 15)))
+  ##model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  ##model.add(tf.keras.layers.LSTM(100))
+  ###model.add(tf.keras.layers.LSTM(100))
+  ###model.add(tf.keras.layers.LSTM(100))
+  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  #model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dropout(0.1))
+  model.add(tf.keras.layers.Flatten())
+  model.add(tf.keras.layers.Dense(11, activation="linear"))
+
+  model.summary()
+  """
+  """
+  #WORKING 0.9 RMSE
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer((seq_length,15)),
+      tf.keras.layers.LSTM(100, return_sequences = True),     
+      tf.keras.layers.LSTM(100, return_sequences = True),
+      tf.keras.layers.LSTM(50),
+      #tf.keras.layers.Dense(8, activation = 'relu'),
+      tf.keras.layers.Dense(30, activation = 'relu'),
+      tf.keras.layers.Dense(11, activation = 'linear')
+      #tf.keras.layers.Dense(11, activation = 'softmax')
+  ])
+  """
+
+  """
+  model = tf.keras.Sequential([
+          tf.keras.layers.Bidirectional(
+          tf.keras.layers.LSTM(100),
+          input_shape=(seq_length, 15)),
+    #tf.keras.layers.LSTM(100, return_sequences = True),     
+    #tf.keras.layers.LSTM(100, return_sequences = True),
+    #tf.keras.layers.LSTM(50),
+    tf.keras.layers.Dense(8, activation = 'relu'),
+    tf.keras.layers.Dense(1, activation = 'linear')
+  ])
+  """
+
+  """
+  model = tf.keras.Sequential
+  model.add(tf.keras.layers.InputLayer((seq_length,15)))
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))     
+  model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.LSTM(50))
+  model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  model.add(tf.keras.layers.Dense(1, activation = 'linear'))
+  """
+
+  #LIST OF TESTED CNN MODELS
+  """
+  model_0 = tf.keras.Sequential(
+    [
+        #tf.keras.layers.Input(shape=input_shape),        
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Dropout(0.4),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Dropout(0.5),
+        #tf.keras.layers.Dense(num_classes_0, activation='softmax')
+    ]
+  )
+  """
+
+  """
+  #good model 
+  n_features = 10                        
+
+  model = tf.keras.Sequential()
+
+  model.add(tf.keras.layers.InputLayer((seq_length,n_features)))
+  #model.add(tf.keras.layers.BatchNormalization())
+  model.add(tf.keras.layers.LSTM(70, return_sequences = True))
+  #model.add(tf.keras.layers.BatchNormalization())     
+  #model.add(tf.keras.layers.LSTM(100, return_sequences = True))
+  model.add(tf.keras.layers.Dropout(0.2))
+  model.add(tf.keras.layers.LSTM(50))
+  #model.add(tf.keras.layers.Dense(8, activation = 'relu'))
+  ##model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+  model.add(tf.keras.layers.Dropout(0.2))
+  model.add(tf.keras.layers.Dense(11, activation = 'linear'))
+
+  model.summary()
+  """
