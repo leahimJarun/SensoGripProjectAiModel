@@ -1,23 +1,5 @@
-# Lint as: python3
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-# pylint: disable=redefined-outer-name
-# pylint: disable=g-bad-import-order
-
-"""Build and train neural networks."""
-
+#"""Build and train for the AI Models."""
+#imports
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -33,7 +15,6 @@ model_name = ""
 
 
 def reshape_function(data, label):
-  #CHANGE reshaped_data = tf.reshape(data, [-1, 3, 1])
   reshaped_data = tf.reshape(data, [-1, 10, 1])
   return reshaped_data, label
 
@@ -52,9 +33,24 @@ def build_cnn(args, seq_length):
   #ERROR ValueError: Input 0 of layer "sequential" is incompatible with the layer: expected shape=(None, 128, 3, 1), found shape=(None, 640, 3, 1)
   #CHANGE added fixed seq_length
   #seq_length = 640
-  
-  """
-  model = tf.keras.Sequential([
+  global model_name
+
+  if args.modelnumber == "0":
+    model_name = "-CNN_model-0"
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.Conv2D(
+            10, (20, 10),
+            padding="same",
+            activation="relu",
+            input_shape=(seq_length, 10, 1)))
+    model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+    model.add(tf.keras.layers.Flatten())
+    #model.add(tf.keras.layers.Dense(64, activation='relu'))
+    model.add(tf.keras.layers.Dense(9, activation='linear'))
+    model.summary()
+  elif args.modelnumber == "1":
+    model_name = "-CNN_model-1"
+    model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(
           10, (20, 10),
           padding="same",
@@ -72,27 +68,7 @@ def build_cnn(args, seq_length):
       tf.keras.layers.Dropout(0.1),  # (batch, 16)
       #tf.keras.layers.Dense(11, activation="softmax")  # (batch, 4)
       tf.keras.layers.Dense(9, activation="relu")  # (batch, 4)
-  ])
-  """
-
-  global model_name
-
-  #TODO add modelnumber to foldername
-  if args.modelnumber == "0":
-    model_name = "-CNN_model0"
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Conv2D(
-            10, (20, 10),
-            padding="same",
-            activation="relu",
-            input_shape=(seq_length, 10, 1)))
-    model.add(tf.keras.layers.MaxPooling2D((3, 3)))
-    model.add(tf.keras.layers.Flatten())
-    #model.add(tf.keras.layers.Dense(64, activation='relu'))
-    model.add(tf.keras.layers.Dense(9))
-    model.summary()
-
-
+    ])
 
 
   model_path = os.path.join("./netmodels", "CNN")
@@ -169,7 +145,7 @@ def build_lstm(seq_length):
 
   #TODO add modelnumber to foldername
   if args.modelnumber == "0":
-    model_name = "-LSTM_model0"
+    model_name = "-LSTM_model-0"
     model = tf.keras.Sequential([
             tf.keras.Input(shape=(seq_length, 10)),
             tf.keras.layers.LSTM(100),
@@ -178,7 +154,7 @@ def build_lstm(seq_length):
         ])
     model.summary()
   elif args.modelnumber == "1":
-    model_name = "-LSTM_model1"
+    model_name = "-LSTM_model-1"
     #LSTM Sequential model with 2 layers, 100 neurons in first layer after it a Dropoutlayer with 20% and then a dense-layer with 9 neurons
     model = tf.keras.Sequential([
           tf.keras.Input(shape=(seq_length, 10)),
@@ -190,7 +166,7 @@ def build_lstm(seq_length):
       ])
     model.summary()
   elif args.modelnumber == "2":
-    model_name = "-LSTM_model2"
+    model_name = "-LSTM_model-2"
     model = tf.keras.Sequential([
         tf.keras.Input(shape=(seq_length, 10)),
         tf.keras.layers.LSTM(100),
@@ -199,7 +175,7 @@ def build_lstm(seq_length):
     ])
     model.summary()
   elif args.modelnumber == "3":
-    model_name = "-LSTM_model3"
+    model_name = "-LSTM_model-3"
     #LSTM Sequential model with 3 layers, 100 neurons in first layer, 100 neurons in second layer and then a dense-layer with 9 neurons
     model = tf.keras.Sequential([
         tf.keras.Input(shape=(seq_length, 10)),
@@ -208,7 +184,16 @@ def build_lstm(seq_length):
         tf.keras.layers.Dense(units=9, activation="linear"),
     ])
     model.summary()
-
+  elif args.modelnumber == "4":
+    model_name = "-LSTM_model-4"
+    model = tf.keras.Sequential([
+    tf.keras.layers.Bidirectional(
+        tf.keras.layers.LSTM(100, return_sequences = True),
+        input_shape=(seq_length, 10)),
+        tf.keras.layers.LSTM(100),
+        tf.keras.layers.Dropout(0.2),
+      tf.keras.layers.Dense(units=9, activation="linear")
+    ])
 
   """
   #Loss: 2.5077505111694336, RMSE: 1.583587884902954 -> 5 epochs
