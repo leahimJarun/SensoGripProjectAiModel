@@ -30,9 +30,6 @@ def calculate_model_size(model):
 
 def build_cnn(seq_length):
   """Builds a convolutional neural network in Keras."""
-  #ERROR ValueError: Input 0 of layer "sequential" is incompatible with the layer: expected shape=(None, 128, 3, 1), found shape=(None, 640, 3, 1)
-  #CHANGE added fixed seq_length
-  #seq_length = 640
   global model_name
 
   if args.modelnumber == "0":
@@ -54,17 +51,17 @@ def build_cnn(seq_length):
           10, (20, 10),
           padding="same",
           activation="relu",
-          input_shape=(seq_length, 10, 1)),  # output_shape=(batch, 128, 3, 8)
-      tf.keras.layers.MaxPool2D((3, 3)),  # (batch, 42, 1, 8)
-      tf.keras.layers.Dropout(0.1),  # (batch, 42, 1, 8)
+          input_shape=(seq_length, 10, 1)),  
+      tf.keras.layers.MaxPool2D((3, 3)),  
+      tf.keras.layers.Dropout(0.1),  
       tf.keras.layers.Conv2D(16, (10, 1), padding="same",
-                             activation="relu"),  # (batch, 42, 1, 16)
-      tf.keras.layers.MaxPool2D((3, 1), padding="same"),  # (batch, 14, 1, 16)
-      tf.keras.layers.Dropout(0.1),  # (batch, 14, 1, 16)
-      tf.keras.layers.Flatten(),  # (batch, 224)
-      tf.keras.layers.Dense(16, activation="relu"),  # (batch, 16)
-      tf.keras.layers.Dropout(0.1),  # (batch, 16)
-      tf.keras.layers.Dense(9, activation="relu")  # (batch, 4)
+                             activation="relu"),  
+      tf.keras.layers.MaxPool2D((3, 1), padding="same"),  
+      tf.keras.layers.Dropout(0.1),  
+      tf.keras.layers.Flatten(),  
+      tf.keras.layers.Dense(16, activation="relu"),  
+      tf.keras.layers.Dropout(0.1),  
+      tf.keras.layers.Dense(9, activation="relu")  
     ])
 
 
@@ -72,18 +69,11 @@ def build_cnn(seq_length):
   print("Built CNN.")
   if not os.path.exists(model_path):
     os.makedirs(model_path)
-  #wheights disabled !!!!! TODO
-  #model.load_weights("./netmodels/CNN/weights.h5")
   return model, model_path
 
 
 def build_lstm(seq_length):
   """Builds an LSTM in Keras."""
-  #CHANGE input_shape=(seq_length, 15)
-  #tf.keras.layers.LSTM(22),
-  #tf.keras.layers.Dense(10
-
-
   #LSTM Sequential model with 2 layers, 100 neurons in first layer after it a flatten and then a dense-layer with 9 neurons
   #Best performing model till now 28.11.2023 14:26
   #RMSE 1.4 -> but no accurate predictions epochs 30 -> seq 20 -> batch 64
@@ -97,7 +87,7 @@ def build_lstm(seq_length):
     model = tf.keras.Sequential([
             tf.keras.Input(shape=(seq_length, 10)),
             tf.keras.layers.LSTM(100),
-            tf.keras.layers.Dense(units=9, activation="relu"),
+            tf.keras.layers.Dense(units=9, activation="linear"),
         ])
     model.summary()
   if args.modelnumber == "1":
@@ -115,9 +105,7 @@ def build_lstm(seq_length):
     model = tf.keras.Sequential([
           tf.keras.Input(shape=(seq_length, 10)),
           tf.keras.layers.LSTM(100),
-          #tf.keras.layers.Flatten(),
           tf.keras.layers.Dropout(0.2),
-          #tf.keras.layers.Dense(units=84, activation="relu"),
           tf.keras.layers.Dense(units=9, activation="linear"),
       ])
     model.summary()
@@ -186,57 +174,16 @@ def train_net(
     test_len,
     test_data,
     kind):
-  
-
-
-
-  """
-  print("\n\n\n TEST PREDICTION \n\n\n")
-  model.predict(train_data)
-  # Load the TFLite model in TFLite Interpreter
-  interpreter = tf.lite.Interpreter(model.tflite)
-  # There is only 1 signature defined in the model,
-  # so it will return it by default.
-  # If there are multiple signatures then we can pass the name.
-  my_signature = interpreter.get_signature_runner()
-
-  # my_signature is callable with input as arguments.
-  output = my_signature(x=tf.constant([1.0], shape=(1,10), dtype=tf.float32))
-  # 'output' is dictionary with all outputs from the inference.
-  # In this case we have single output 'result'.
-  print(output['result'])
-  """
-
-
-
-
-
-
 
   """Trains the model."""
   calculate_model_size(model)
+  #tested batch_sizes = 64, 128, 16, 10, 64
   #RMSE 1,7 -> 10 epochs -> batch 64 -> sequenc 20
-  epochs = 30 #15 # maybe 26 better
+  epochs = 30
   #The batch_size argument specifies how many pieces of training data to feed into the network before measuring its accuracy and updating its weights and biases.
-  #CHANGE batch_size = 64
-  #batch_size = 16
-  
-  #batch_size = 16
-  #batch_size = 10
   batch_size = 64
   
-  """
-  model.compile(
-      optimizer="adam",
-      loss="sparse_categorical_crossentropy",
-      metrics=["accuracy"])
-  
-  #TODO try different optimizer
-  #model with meanquare error out
-  """
   rmse = tf.keras.metrics.RootMeanSquaredError()
-  #model.compile(optimizer="adam", loss='mean_squared_error',
-  #            metrics=[rmse,'mae'])
   model.compile(
     optimizer='adam',
     loss='mse',
@@ -269,9 +216,6 @@ def train_net(
   train_data = train_data.batch(batch_size).repeat()
   valid_data = valid_data.batch(batch_size)
   test_data = test_data.batch(batch_size)
-  #print("TEST-DATA: ")
-  #print(test_data)
-  #CHANGED -> steps_per_epoch=1000
 
   #EaelyStop
   #EarlyStopping() saves us a lot of time, it stops the model training once it realizes that there will be no more decrease in loss in further epochs and training can now be stopped earlier than described epochs.
@@ -290,7 +234,6 @@ def train_net(
       validation_steps=1,
       #callbacks=[tensorboard_callback, early_stop])
       callbacks=[tensorboard_callback])
-  #loss, acc, val_mae = model.evaluate(test_data)
   loss, rmse, acc= model.evaluate(test_data)
   pred = np.argmax(model.predict(test_data), axis=1)
   print("\n\n\n TEST PREDICTION \n\n\n")
@@ -300,66 +243,19 @@ def train_net(
   print(pred)
   print("\n\n\n TEST PREDICTION END \n\n\n")
   #num_classes: The possible number of labels the classification task can
-  #TODO research what is confusion matrix
   confusion = tf.math.confusion_matrix(
       labels=tf.constant(test_labels),
       predictions=tf.constant(pred),
       num_classes=9)
   print(confusion)
-  #TODO what is val_mae
-  #print("Loss {}, Accuracy {}".format(loss, acc))
-  #print("Loss {}, RMSE {}, val_mae {}".format(loss, acc, val_mae))
   print("Loss: {}, RMSE: {}, Accuracy: {}".format(loss, rmse, acc))
   # Convert the model to the TensorFlow Lite format without quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
-
-  """
-  print("\n\n\n BEFORE INFERENCE")
-  # Load the TFLite model and allocate tensors.
-  interpreter = tf.lite.Interpreter(model_path="model.tflite")
-  interpreter.allocate_tensors()
-
-  # Get input and output tensors.
-  input_details = interpreter.get_input_details()
-  output_details = interpreter.get_output_details()
-
-  # Test the model on random input data.
-  input_shape = input_details[0]['shape']
-  input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
-  interpreter.set_tensor(input_details[0]['index'], input_data)
-
-  interpreter.invoke()
-
-  # The function `get_tensor()` returns a copy of the tensor data.
-  # Use `tensor()` in order to get a pointer to the tensor.
-  output_data = interpreter.get_tensor(output_details[0]['index'])
-
-
-
-
-
-  print("\n\n\n AFTER INFERENCE")
-  print(output_data)
-  """
-
-
-  #predict_fn = tf.contrib.predictor.from_saved_model("model.tflite")
-  #predictions = predict_fn(test_data)
-  #print(predictions['scores'])
-
   
-
-
-  #MIHI
-
-  #converter.optimizations = [tf.lite.Optimize.DEFAULT]
-  #converter.experimental_new_converter=True
-  #converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
 
   converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
   converter._experimental_lower_tensor_list_ops = False
 
-  #MIHI END
   
   
   tflite_model = converter.convert()
@@ -370,13 +266,10 @@ def train_net(
   # Convert the model to the TensorFlow Lite format with quantization
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
-  
-  #MIHI
 
   converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
   converter._experimental_lower_tensor_list_ops = False
 
-  #MIHI END
 
   tflite_model = converter.convert()
 
@@ -395,38 +288,22 @@ if __name__ == "__main__":
 
   #print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
-
   parser = argparse.ArgumentParser()
   parser.add_argument("--model", "-m")
   parser.add_argument("--modelnumber", "-mn")
-  parser.add_argument("--person", "-p")
   args = parser.parse_args()
-  args.model = "LSTM"
-  args.modelnumber = "0"
+  #args.model = "LSTM"
+  #args.modelnumber = "0"
 
-  #seq_length data window size
-  #seq_length = 2988
-  #seq_length = 128
-  #seq_length = 640
-  #seq_length = 64
-  #seq_length = 128
-  #20 window
-  #seq_length = 10
-  #je kleiner die seq_length umso ungenauer bzw größerer RMSE ??? why -> weil das fenster zu klein und das model somit keinen gescheiten zusammenhang erkennen kann ??
-  #128 -> RMSE 1.378 -> early stop 17 epochs
-  #seq 400 batch 16 -> RMSE
+  #seq_length data window sizes tested = 2988, 128, 640, 64, 10
+  #wenn die seq_length sehr klein model ungenauer bzw größerer RMSE ??? why -> weil das fenster zu klein und das model somit keinen gescheiten zusammenhang erkennen kann ??
+  #seq_length = 128 -> RMSE 1.378 -> early stop 17 epochs
   #seq_length = 20 # RMSE LSTM -> 2.3 -> 10 Epochs
-  #without 0 rows RMSE 2.3 and 1.8 -> with 0 rows RMSE 2.5
   #seq_length = 128 # RMSE LSTM -> 1.7 -> 10 Epochs
   seq_length = 20
 
 
   print("Start to load data...")
-  #  if args.person == "true":
-  #    train_len, train_data, valid_len, valid_data, test_len, test_data = \
-  #        load_data("./person_split/train", "./person_split/valid",
-  #                  "./person_split/test", seq_length)
-  #  else:
   train_len, train_data, valid_len, valid_data, test_len, test_data = \
           load_data("./Data/train/train.json", "./Data/valid/valid.json", "./Data/test/test.json", seq_length)
 
